@@ -1,0 +1,955 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>谜语剧场 | AI 交互叙事游戏</title>
+    <meta
+      name="description"
+      content="AI 驱动的互动叙事游戏，支持多题材剧本、角色关系推进、分支回溯与多结局体验。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Great+Vibes&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/base.css" />
+    <link rel="stylesheet" href="/src/styles/refactor.css" />
+    <link rel="stylesheet" href="/src/styles/ux-pro.css" />
+    <link rel="stylesheet" href="/src/styles/site-pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="grain"></div>
+      <div class="vignette"></div>
+      <div class="decorative-top"></div>
+
+      <header class="navbar">
+        <div class="logo">
+          <svg class="logo-icon" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <path d="M50 82 L45 80 L50 86 L55 80 Z" opacity="0.6"></path>
+            <path d="M50 78 L10 70 L10 62 L50 70 L90 62 L90 70 Z" opacity="0.3"></path>
+            <path d="M49 70 L12 60 L12 30 L49 40 Z" opacity="0.6"></path>
+            <path d="M51 70 L88 60 L88 30 L51 40 Z" opacity="0.6"></path>
+            <path d="M48 64 L16 52 L16 22 L48 34 Z" opacity="1"></path>
+            <path d="M52 64 L84 52 L84 22 L52 34 Z" opacity="1"></path>
+            <circle cx="28" cy="42" r="1.5" fill="#111" opacity="0.5"></circle>
+            <path d="M26 48 L34 50" stroke="#111" stroke-width="1.5" stroke-linecap="round" opacity="0.4"></path>
+            <path d="M48 55 L38 75 L42 76 L50 60" opacity="0.9"></path>
+            <path d="M48 55 C 60 30, 75 15, 95 5 C 80 15, 72 28, 68 38 C 75 35, 78 36, 70 46 C 62 55, 55 60, 48 55 Z" opacity="1"></path>
+            <path d="M48 55 C 60 30, 75 15, 95 5" fill="none" stroke="#222" stroke-width="1.5" opacity="0.3"></path>
+          </svg>
+          <div class="logo-text-wrapper">
+            <div class="logo-title">谜语剧场</div>
+            <div class="logo-subtitle">剧情交互游戏</div>
+          </div>
+        </div>
+
+        <button class="nav-toggle" id="navToggle" type="button" aria-label="打开导航菜单" aria-expanded="false">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
+
+        <ul class="nav-links" id="navLinks" aria-label="站点导航">
+          <li><button class="nav-link-btn active" type="button" data-nav-target="library" aria-current="page">首页</button></li>
+          <li><button class="nav-link-btn" type="button" data-nav-target="catalog">剧本库</button></li>
+          <li><button class="nav-link-btn" type="button" data-nav-target="studio">创作中心</button></li>
+          <li><button class="nav-link-btn" type="button" data-nav-target="ranking">排行榜</button></li>
+          <li><button class="nav-link-btn" type="button" data-nav-target="community">社区</button></li>
+        </ul>
+
+        <div class="nav-actions">
+          <button class="icon-btn" type="button" aria-label="搜索">
+            <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+          <button class="icon-btn" type="button" aria-label="通知">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          </button>
+          <button class="icon-btn" type="button" aria-label="消息">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          </button>
+          <button class="user-profile" id="profileEntryBtn" type="button" aria-label="进入个人主页">
+            <div class="avatar" id="navAvatar"></div>
+            <div class="user-info">
+              <div class="user-name" id="navUserName">未登录 <svg class="svg-icon" style="font-size: 14px;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+              <div class="level" id="navUserLevel"></div>
+            </div>
+          </button>
+        </div>
+      </header>
+
+      <main class="screen active" id="libraryScreen" aria-labelledby="libraryTitle">
+        <div class="container library-container">
+          <section class="hero-banner">
+            <div class="hero-left">
+              <div class="bg-cursive-text text-your">Your</div>
+              <div class="bg-cursive-text text-story">Story</div>
+
+              <div class="title-wrapper">
+                <span class="star star-1"><svg class="ic" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                <span class="star star-2"><svg class="ic" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                <span class="star star-3"><svg class="ic" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                <h1 class="main-title title-line-1" id="libraryTitle">你的选择</h1>
+                <h1 class="main-title title-line-2">决定故事的结局</h1>
+              </div>
+
+              <div class="hero-subtitle">沉浸式剧情体验<span>·</span>多线分支结局<span>·</span>你的选择改变一切</div>
+              <p class="hero-copy">
+                先从剧本库里挑选你想进入的一部故事。每个题材都有不同的人物关系、叙事节奏与结局走向。
+              </p>
+
+              <div class="hero-button-row">
+                <button class="btn-primary" id="enterStoryBtn">开始探索</button>
+              </div>
+            </div>
+
+            <div class="hero-right">
+              <div class="recommend-card">
+                <span class="corner corner-tl"></span>
+                <span class="corner corner-tr"></span>
+                <span class="corner corner-bl"></span>
+                <span class="corner corner-br"></span>
+
+                <div class="rc-header">
+                  <span class="header-line"></span>
+                  每日推荐
+                  <span class="header-line"></span>
+                </div>
+                <div id="libraryPreviewCard"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="filter-section" aria-labelledby="featuredShelfTitle">
+            <div class="section-title" id="featuredShelfTitle">精选剧本</div>
+            <div class="filter-tabs" id="homeFilterTabs" aria-label="首页题材筛选">
+              <button class="active" type="button" data-home-catalog-category="all">全部</button>
+              <button type="button" data-home-catalog-category="悬疑推理">悬疑推理</button>
+              <button type="button" data-home-catalog-category="情感沉浸">情感沉浸</button>
+              <button type="button" data-home-catalog-category="都市博弈">都市博弈</button>
+              <button type="button" data-home-catalog-category="未来科幻">未来科幻</button>
+            </div>
+            <div class="filter-dropdowns">
+              <button class="dropdown-btn" id="openCatalogBtn" type="button">前往剧本库</button>
+            </div>
+          </section>
+
+          <section class="grid-container" id="storyShelfGrid" aria-label="首页精选剧本列表"></section>
+
+          <section class="features">
+            <div class="feature-item">
+              <div class="feature-icon-box">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 14.5c-2.5 0-4.5-2-4.5-4.5S9.5 5.5 12 5.5s4.5 2 4.5 4.5-2 4.5-4.5 4.5zm0-7c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5z" class="filled"></path></svg>
+              </div>
+              <div class="feature-text">
+                <h5>沉浸体验</h5>
+                <p>精美画面与音效，带来<br />身临其境的代入感</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon-box">
+                <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </div>
+              <div class="feature-text">
+                <h5>多重结局</h5>
+                <p>你的每一个选择，都会导向<br />不同的故事结局</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon-box">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              </div>
+              <div class="feature-text">
+                <h5>创作分享</h5>
+                <p>创作属于你的故事，分享给<br />全球玩家</p>
+              </div>
+            </div>
+            <div class="feature-item feature-save">
+              <div class="feature-icon-box">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
+              <div class="feature-text">
+                <h5>社区互动</h5>
+                <p>与玩家交流心得，参与话题<br />讨论和活动</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="library-hidden-actions" aria-hidden="true">
+            <div id="librarySaveSummary">还没有保存过旅程。</div>
+            <button id="libraryContinueBtn">继续旅程</button>
+            <button id="libraryShowGalleryBtn">查看图鉴</button>
+          </div>
+        </div>
+      </main>
+
+      <main class="screen" id="catalogScreen" aria-label="剧本库页面">
+        <div class="container utility-container">
+          <section class="utility-hero site-panel">
+            <div>
+              <div class="utility-kicker">剧本库</div>
+              <h1 class="utility-title">浏览所有剧本，找到最适合你的那一部</h1>
+              <p class="utility-copy">按题材、难度、时长和热度筛选，快速找到你真正想进入的剧情世界。</p>
+            </div>
+            <div class="utility-stat-strip">
+              <div class="utility-stat">
+                <span class="utility-stat-label">收录剧本</span>
+                <strong>4</strong>
+              </div>
+              <div class="utility-stat">
+                <span class="utility-stat-label">支持题材</span>
+                <strong>多类型</strong>
+              </div>
+              <div class="utility-stat">
+                <span class="utility-stat-label">推荐方式</span>
+                <strong>按偏好浏览</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="catalog-toolbar site-panel">
+            <div class="catalog-toolbar-main">
+              <input class="catalog-search-input" id="catalogSearchInput" type="search" placeholder="搜索剧本标题、题材或关键词" aria-label="搜索剧本标题、题材或关键词" />
+              <div class="catalog-filter-tabs" id="catalogFilterTabs">
+                <button class="active" type="button" data-catalog-category="all">全部</button>
+                <button type="button" data-catalog-category="悬疑推理">悬疑推理</button>
+                <button type="button" data-catalog-category="情感沉浸">情感沉浸</button>
+                <button type="button" data-catalog-category="都市博弈">都市博弈</button>
+                <button type="button" data-catalog-category="未来科幻">未来科幻</button>
+              </div>
+            </div>
+            <div class="catalog-toolbar-side">
+              <div class="catalog-result-count" id="catalogResultCount">共找到 0 部剧本</div>
+              <select class="catalog-sort-select" id="catalogSortSelect" aria-label="剧本排序方式">
+                <option value="recommended">推荐优先</option>
+                <option value="rating">评分优先</option>
+                <option value="popular">热度优先</option>
+                <option value="latest">最新优先</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="catalog-grid" id="catalogGrid"></section>
+        </div>
+      </main>
+
+      <main class="screen" id="startScreen" aria-labelledby="gameTitle">
+        <div class="container detail-container">
+          <div class="detail-topbar">
+            <button class="back-link" id="backToLibraryBtn" type="button">返回剧本库</button>
+            <div class="detail-tabs">
+              <button class="active" id="detailInfoTab" type="button">剧本信息</button>
+              <button id="detailSetupTab" type="button">进入设置</button>
+              <button id="detailAtlasTab" type="button">结局一览</button>
+            </div>
+          </div>
+
+          <section class="detail-hero">
+            <aside class="detail-cover-column">
+              <div class="detail-cover-card">
+                <div class="detail-cover"></div>
+                <button class="cover-mini-btn" type="button">预览</button>
+              </div>
+            </aside>
+
+            <section class="detail-main-column">
+              <div class="detail-title-row">
+                <div>
+                  <div class="detail-genre" id="storyGenre">互动叙事</div>
+                  <h1 class="detail-title" id="gameTitle">命运的抉择</h1>
+                  <div class="detail-subtitle" id="storySubtitle">Chronicles of Fate</div>
+                </div>
+                <div class="detail-badge" id="storyThemeLabel">奇幻悬疑</div>
+              </div>
+
+              <div class="detail-meta-row">
+                <span>结局解锁 <strong id="unlockedEndingCount">0 / 4</strong></span>
+                <span>模式 LLM Mock</span>
+              </div>
+
+              <p class="detail-opening" id="storyOpeningShot"></p>
+              <p class="detail-synopsis" id="storySynopsis"></p>
+              <div class="detail-description" id="storyPackDescription"></div>
+
+              <div class="detail-tag-row" id="storyDetailFacts"></div>
+
+              <div class="detail-action-row">
+                <button class="btn-primary" id="startNewGameBtn">开始故事</button>
+                <button class="btn-secondary" id="continueGameBtn">继续旅程</button>
+                <button class="btn-secondary" id="showGalleryBtn">结局图鉴</button>
+              </div>
+            </section>
+
+            <aside class="detail-side-column">
+              <section class="detail-side-card detail-info-card ornate-card">
+                <div class="side-card-title">故事承诺</div>
+                <div id="storyPromiseLead"></div>
+              </section>
+
+              <section class="detail-side-card detail-score-card ornate-card">
+                <div class="side-card-title">主角位置</div>
+                <div id="storyRoleSummary"></div>
+              </section>
+
+              <section class="detail-side-card detail-setup-card ornate-card">
+                <div class="side-card-title">进入旅程</div>
+                <p class="setup-description" id="journeySetupPrompt"></p>
+                <label class="setup-label" id="playerAliasLabel" for="playerAliasInput">旅程署名</label>
+                <input class="setup-input" id="playerAliasInput" type="text" maxlength="16" placeholder="例如：无名旅人" />
+                <p class="setup-description compact" id="playerAliasHint"></p>
+                <div class="setup-label">你会怎样靠近这段故事</div>
+                <div class="archetype-grid" id="archetypeButtons"></div>
+                <div class="journey-summary" id="journeySummary"></div>
+                <div class="journey-effect-list" id="journeyEffectList"></div>
+              </section>
+            </aside>
+          </section>
+
+          <section class="detail-bottom-grid">
+            <section class="detail-panel ornate-card">
+              <div class="detail-panel-title">世界与人物</div>
+              <div class="story-world-guide" id="storyWorldGuide"></div>
+              <div class="story-cast-guide" id="storyCastGuide"></div>
+            </section>
+
+            <aside class="detail-panel detail-side-stack ornate-card">
+              <div class="detail-panel-title">最近一次旅程</div>
+              <div class="save-summary" id="saveSummary">还没有保存过旅程。</div>
+              <div class="detail-panel-title offset-top">已解锁结局</div>
+              <div class="ending-gallery compact" id="startGallery"></div>
+            </aside>
+          </section>
+        </div>
+      </main>
+
+      <main class="screen" id="atlasScreen" aria-label="结局一览页面">
+        <div class="container atlas-container">
+          <div class="detail-topbar">
+            <button class="back-link" id="atlasBackBtn" type="button">返回剧本详情</button>
+            <div class="detail-tabs">
+              <button id="atlasInfoTab" type="button">剧本信息</button>
+              <button id="atlasSetupTab" type="button">进入设置</button>
+              <button class="active" id="atlasOverviewTab" type="button">结局一览</button>
+            </div>
+          </div>
+
+          <section class="atlas-layout">
+            <aside class="atlas-cover-panel site-panel">
+              <div class="atlas-cover-art"></div>
+              <div class="atlas-cover-copy">
+                <div class="atlas-cover-kicker" id="atlasStoryGenre">剧本类型</div>
+                <h1 class="atlas-story-title" id="atlasStoryTitle">雾都谜案</h1>
+                <div class="atlas-story-subtitle" id="atlasStorySubtitle">剧情图谱</div>
+                <div class="atlas-story-meta" id="atlasMetaInfo"></div>
+              </div>
+            </aside>
+
+            <section class="atlas-branch-panel site-panel">
+              <div class="atlas-panel-head">
+                <div>
+                  <div class="atlas-head-label">故事路径</div>
+                  <div class="atlas-head-title">分支概览</div>
+                </div>
+                <div class="atlas-unlocked" id="atlasUnlockedCount">0 / 4</div>
+              </div>
+              <div class="atlas-branch-board" id="atlasBranchBoard"></div>
+            </section>
+
+            <aside class="atlas-ending-panel site-panel">
+              <div class="atlas-panel-head">
+                <div>
+                  <div class="atlas-head-label">结局总览</div>
+                  <div class="atlas-head-title">已解锁与未解锁</div>
+                </div>
+              </div>
+              <div class="atlas-ending-list" id="atlasEndingList"></div>
+            </aside>
+          </section>
+        </div>
+      </main>
+
+      <main class="screen" id="studioScreen" aria-label="创作中心">
+        <div class="container utility-container">
+          <section class="utility-hero studio-hero site-panel">
+            <div>
+              <div class="utility-kicker">创作中心</div>
+              <h1 class="utility-title">把一个故事写成一部可游玩的作品</h1>
+              <p class="utility-copy">角色设定、场景节奏、分支图谱和结局条件，都在这里被整理成可持续迭代的创作流程。</p>
+            </div>
+            <div class="utility-stat-strip" id="studioSelectedStory"></div>
+          </section>
+
+          <div class="studio-tabs" id="studioTabs">
+            <button class="studio-tab active" type="button" data-studio-tab="projects">我的项目</button>
+            <button class="studio-tab" type="button" data-studio-tab="templates">模板库</button>
+            <button class="studio-tab" type="button" data-studio-tab="tools">写作工具</button>
+          </div>
+
+          <section class="utility-grid studio-grid" data-studio-view="projects">
+            <aside class="site-panel">
+              <div class="site-panel-kicker">草稿区</div>
+              <h2 class="site-panel-title">当前项目</h2>
+              <div class="draft-list" id="studioDraftList"></div>
+              <button class="studio-new-draft-btn" type="button">+ 新建草稿</button>
+            </aside>
+
+            <section class="site-panel studio-center-panel">
+              <div class="site-panel-kicker">创作板</div>
+              <h2 class="site-panel-title">章节与镜头计划</h2>
+              <div class="scene-board" id="studioSceneBoard"></div>
+            </section>
+
+            <aside class="site-panel">
+              <div class="site-panel-kicker">发布前检查</div>
+              <h2 class="site-panel-title">创作清单</h2>
+              <div class="checklist-stack" id="studioChecklist"></div>
+            </aside>
+          </section>
+
+          <section class="studio-template-section" id="studioTemplateSection" data-studio-view="templates" style="display:none">
+            <div class="tpl-header-bar">
+              <div class="tpl-filter-row">
+                <div class="tpl-search-box">
+                  <span class="tpl-search-icon"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                  <input class="tpl-search-input" id="tplSearchInput" type="text" placeholder="搜索模板名称、标签…" />
+                </div>
+                <div class="tpl-category-tabs" id="tplCategoryTabs">
+                  <button class="tpl-cat-btn active" data-tpl-cat="all">全部</button>
+                  <button class="tpl-cat-btn" data-tpl-cat="悬疑">悬疑</button>
+                  <button class="tpl-cat-btn" data-tpl-cat="恋爱">恋爱</button>
+                  <button class="tpl-cat-btn" data-tpl-cat="都市">都市</button>
+                  <button class="tpl-cat-btn" data-tpl-cat="科幻">科幻</button>
+                  <button class="tpl-cat-btn" data-tpl-cat="奇幻">奇幻</button>
+                  <button class="tpl-cat-btn" data-tpl-cat="惊悚">惊悚</button>
+                </div>
+                <div class="tpl-sort-wrap">
+                  <select class="tpl-sort-select" id="tplSortSelect">
+                    <option value="popular">按热度</option>
+                    <option value="newest">最新</option>
+                    <option value="difficulty">按难度</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="tpl-grid" id="studioTemplateGrid"></div>
+          </section>
+
+          <!-- Template Detail Overlay -->
+          <div class="tpl-detail-overlay" id="tplDetailOverlay">
+            <div class="tpl-detail-panel" id="tplDetailPanel">
+              <div class="tpl-detail-header">
+                <div class="tpl-detail-title-row">
+                  <span class="tpl-detail-icon" id="tplDetailIcon"></span>
+                  <div>
+                    <h2 class="tpl-detail-title" id="tplDetailTitle"></h2>
+                    <p class="tpl-detail-subtitle" id="tplDetailSubtitle"></p>
+                  </div>
+                </div>
+                <button class="tool-panel-close" id="tplDetailClose" type="button" aria-label="关闭"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+              <div class="tpl-detail-body" id="tplDetailBody"></div>
+            </div>
+          </div>
+
+          <section class="studio-tools-grid" id="studioToolsGrid" data-studio-view="tools" style="display:none">
+          </section>
+
+          <!-- Tool Panel Overlay -->
+          <div class="tool-panel-overlay" id="toolPanelOverlay">
+            <div class="tool-panel" id="toolPanel">
+              <div class="tool-panel-header">
+                <div class="tool-panel-title-row">
+                  <span class="tool-panel-icon" id="toolPanelIcon"></span>
+                  <h2 class="tool-panel-title" id="toolPanelTitle"></h2>
+                </div>
+                <button class="tool-panel-close" id="toolPanelClose" type="button" aria-label="关闭"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+              <div class="tool-panel-body" id="toolPanelBody"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <main class="screen" id="rankingScreen" aria-label="排行榜">
+        <div class="container utility-container">
+          <section class="utility-hero site-panel">
+            <div>
+              <div class="utility-kicker">排行榜</div>
+              <h1 class="utility-title">本周最受欢迎的互动剧本</h1>
+              <p class="utility-copy">按热度、结局完成率和讨论度整理的站内榜单，方便玩家快速找到最值得进入的故事。</p>
+            </div>
+            <div class="utility-stat-strip" id="rankingStats"></div>
+          </section>
+
+          <div class="ranking-tabs" id="rankingTabs">
+            <button class="ranking-tab active" type="button" data-ranking-tab="overall">综合榜</button>
+            <button class="ranking-tab" type="button" data-ranking-tab="hot">热度榜</button>
+            <button class="ranking-tab" type="button" data-ranking-tab="rating">评分榜</button>
+            <button class="ranking-tab" type="button" data-ranking-tab="completion">完成率榜</button>
+          </div>
+
+          <section class="utility-grid ranking-grid">
+            <section class="site-panel">
+              <div class="ranking-list-header">
+                <div>
+                  <div class="site-panel-kicker">热门剧本</div>
+                  <h2 class="site-panel-title">综合榜单</h2>
+                </div>
+                <div class="ranking-period">本周 · 4月7日 — 4月14日</div>
+              </div>
+              <div class="ranking-list" id="rankingTopList"></div>
+            </section>
+
+            <aside class="ranking-sidebar">
+              <section class="site-panel">
+                <div class="site-panel-kicker">聚光灯</div>
+                <h2 class="site-panel-title">本周焦点</h2>
+                <div class="spotlight-card" id="rankingSpotlight"></div>
+              </section>
+
+              <section class="site-panel">
+                <div class="site-panel-kicker">创作者风云</div>
+                <h2 class="site-panel-title">活跃创作者</h2>
+                <div class="creator-list" id="rankingCreatorList"></div>
+              </section>
+
+              <section class="site-panel">
+                <div class="site-panel-kicker">上升最快</div>
+                <h2 class="site-panel-title">新星剧本</h2>
+                <div class="rising-list" id="rankingRisingList"></div>
+              </section>
+            </aside>
+          </section>
+        </div>
+      </main>
+
+      <main class="screen" id="communityScreen" aria-label="社区页面">
+        <div class="container utility-container">
+          <section class="utility-hero site-panel">
+            <div>
+              <div class="utility-kicker">社区</div>
+              <h1 class="utility-title">讨论剧情、交换路线、一起拆解故事细节</h1>
+              <p class="utility-copy">把你的路线记录、角色分析和结局猜想放进社区，看看别人的选择让同一个故事长成了什么样子。</p>
+            </div>
+            <div class="utility-stat-strip" id="communityStats"></div>
+          </section>
+
+          <div class="community-tabs" id="communityTabs">
+            <button class="community-tab active" type="button" data-community-tab="feed">最新动态</button>
+            <button class="community-tab" type="button" data-community-tab="guides">攻略专区</button>
+            <button class="community-tab" type="button" data-community-tab="fanart">同人创作</button>
+          </div>
+
+          <section class="utility-grid community-grid">
+            <section class="community-main-col">
+              <section class="site-panel">
+                <div class="community-post-box" id="communityPostBox">
+                  <div class="post-box-avatar"></div>
+                  <input class="post-box-input" type="text" placeholder="分享你的剧情心得或路线发现..." readonly />
+                  <button class="post-box-btn" type="button">发布</button>
+                </div>
+              </section>
+
+              <section class="site-panel">
+                <div class="site-panel-kicker">动态墙</div>
+                <h2 class="site-panel-title">最新讨论</h2>
+                <div class="feed-list" id="communityFeed"></div>
+              </section>
+            </section>
+
+            <aside class="community-sidebar">
+              <section class="site-panel">
+                <div class="site-panel-kicker">热议话题</div>
+                <h2 class="site-panel-title">正在讨论</h2>
+                <div class="topic-list" id="communityTopics"></div>
+              </section>
+
+              <section class="site-panel">
+                <div class="site-panel-kicker">官方活动</div>
+                <h2 class="site-panel-title">进行中</h2>
+                <div class="event-list" id="communityEvents"></div>
+              </section>
+
+              <section class="site-panel">
+                <div class="site-panel-kicker">精选攻略</div>
+                <h2 class="site-panel-title">高赞指南</h2>
+                <div class="guide-list" id="communityGuides"></div>
+              </section>
+            </aside>
+          </section>
+        </div>
+      </main>
+
+      <main class="screen" id="profileScreen" aria-label="个人主页">
+        <div class="container utility-container">
+          <section class="profile-hero site-panel">
+            <div class="profile-hero-main">
+              <div class="profile-portrait"></div>
+              <div>
+                <div class="utility-kicker">个人主页</div>
+                <h1 class="profile-page-name" id="profileAlias">旅行者</h1>
+                <div class="profile-level-row" id="profileProgress"></div>
+                <p class="utility-copy">故事的选择会留下痕迹。你的路线、结局和最近进入过的剧本，都会被记在这里。</p>
+                <button class="auth-logout-btn" id="logoutBtn" type="button">退出登录</button>
+              </div>
+            </div>
+            <div class="profile-progress-card" id="profileStats"></div>
+          </section>
+
+          <section class="utility-grid profile-grid">
+            <section class="site-panel">
+              <div class="site-panel-kicker">最近旅程</div>
+              <h2 class="site-panel-title">继续阅读</h2>
+              <div class="recent-story-list" id="profileRecentJourneys"></div>
+            </section>
+
+            <section class="site-panel">
+              <div class="site-panel-kicker">成就与里程碑</div>
+              <h2 class="site-panel-title">已点亮的徽记</h2>
+              <div class="badge-list" id="profileBadges"></div>
+            </section>
+
+            <aside class="site-panel">
+              <div class="site-panel-kicker">最近动态</div>
+              <h2 class="site-panel-title">你的足迹</h2>
+              <div class="feed-list compact" id="profileFeed"></div>
+              <div class="topic-list compact" id="profileDiscussions"></div>
+            </aside>
+
+            <section class="site-panel site-panel-full">
+              <div id="llmSettingsContainer"></div>
+            </section>
+          </section>
+        </div>
+      </main>
+
+      <main class="screen" id="gameScreen" aria-label="游戏主界面">
+        <div class="game-immersive">
+          <div class="game-bg-layer" id="gameBgLayer">
+            <div class="bg-current"></div>
+          </div>
+          <div class="game-vignette"></div>
+
+          <div class="game-topbar">
+            <button class="game-back-btn" id="backToMenuBtn" type="button">
+              <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              返回
+            </button>
+            <div class="game-chapter-info">
+              <span class="game-chapter-tag" id="chapterTag"></span>
+              <span class="game-round-tag" id="roundTag"></span>
+            </div>
+            <div class="game-topbar-actions">
+              <button class="game-top-btn" id="clueRecordBtn" type="button">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                线索记录
+              </button>
+              <button class="game-top-btn" id="rollbackBtn" type="button">回溯</button>
+            </div>
+          </div>
+
+          <!-- VN click-to-advance overlay (covers full screen) -->
+          <div class="vn-click-area" id="vnClickArea"></div>
+
+          <!-- Story Intro Overlay (full-screen cinematic intro before VN) -->
+          <div class="story-intro-overlay hidden" id="storyIntroOverlay">
+            <div class="story-intro-content">
+              <div class="intro-genre" id="introGenre"></div>
+              <h1 class="intro-title" id="introTitle"></h1>
+              <p class="intro-subtitle" id="introSubtitle"></p>
+              <p class="intro-synopsis" id="introSynopsis"></p>
+            </div>
+            <div class="story-intro-keys" id="storyIntroKeys">
+              <div class="intro-keys-label">键盘操作</div>
+              <div class="intro-keys-grid">
+                <span class="ik-item"><kbd>Space</kbd><span>继续</span></span>
+                <span class="ik-item"><kbd>H</kbd><span>回顾</span></span>
+                <span class="ik-item"><kbd>S</kbd><span>存档</span></span>
+                <span class="ik-item"><kbd>L</kbd><span>读档</span></span>
+                <span class="ik-item"><kbd>Esc</kbd><span>关闭</span></span>
+              </div>
+              <div class="intro-prompt pulsing">点击或按 <kbd>Space</kbd> 开始</div>
+            </div>
+          </div>
+
+          <!-- VN figure layer for character sprites -->
+          <div class="game-figure-layer" id="gameFigureLayer"></div>
+
+          <!-- VN textbox (fixed bottom) -->
+          <div class="vn-textbox" id="vnTextbox">
+            <div class="vn-speaker-bar">
+              <span class="vn-speaker-name" id="vnSpeakerName"></span>
+            </div>
+            <div class="vn-speaker-mood" id="vnSpeakerMood"></div>
+            <div class="vn-text-content" id="vnTextContent"></div>
+            <div class="vn-advance-hint" id="vnAdvanceHint">
+              <svg class="svg-icon" viewBox="0 0 24 24" style="font-size:12px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </div>
+
+          <!-- VN bottom control panel (WebGAL-style pill) -->
+          <div class="vn-control-panel" id="vnControlPanel">
+            <button class="vn-ctrl-btn" id="vnAutoBtn" type="button" title="自动播放">
+              <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>AUTO</span>
+            </button>
+            <button class="vn-ctrl-btn" id="vnSkipBtn" type="button" title="快进">
+              <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+              <span>SKIP</span>
+            </button>
+            <button class="vn-ctrl-btn" id="vnLogBtn" type="button" title="回看历史">
+              <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="22 12 16 12 13 15 11 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+              <span>LOG</span>
+            </button>
+            <span class="vn-ctrl-divider"></span>
+            <button class="vn-ctrl-btn" id="saveBtn" type="button" title="存档">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span>SAVE</span>
+            </button>
+            <button class="vn-ctrl-btn" id="loadBtn" type="button" title="读档">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>LOAD</span>
+            </button>
+          </div>
+
+          <!-- VN backlog overlay (full-screen history viewer) -->
+          <div class="vn-backlog-overlay hidden" id="vnBacklogOverlay">
+            <div class="vn-backlog-backdrop"></div>
+            <div class="vn-backlog-panel">
+              <div class="vn-backlog-header">
+                <h2 class="vn-backlog-title">回顾</h2>
+                <button class="vn-backlog-close" id="vnBacklogClose" type="button">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+              <div class="vn-backlog-content" id="vnBacklogContent"></div>
+            </div>
+          </div>
+
+          <!-- VN choice overlay (full-screen, shown at choice gates) -->
+          <div class="vn-choice-overlay hidden" id="vnChoiceOverlay">
+            <div class="vn-choice-backdrop"></div>
+            <div class="vn-choice-container">
+              <div class="vn-choice-header">你决定……</div>
+              <div class="vn-choice-list" id="vnChoiceList"></div>
+              <div class="vn-dynamic-options" id="vnDynamicOptions"></div>
+              <form class="vn-input-row" id="freeInputForm">
+                <span class="input-mode-label">自由行动</span>
+                <input
+                  class="game-free-input"
+                  id="freeInput"
+                  type="text"
+                  maxlength="120"
+                  placeholder="输入你的自然语言回应……"
+                />
+                <button class="game-send-btn" type="submit">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Stream status (loading indicator during transitions) -->
+          <div class="stream-status hidden" id="streamStatus" aria-live="polite">
+            <div class="stream-sigil">◈</div>
+            <div>
+              <div class="stream-label" id="streamLabel">叙事引擎正在编织下一段命运</div>
+              <div class="stream-dots" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hidden containers for backward compat -->
+          <div id="storyScroll" class="hidden"></div>
+          <div id="choiceList" class="hidden"></div>
+          <div id="interactionFeedback" class="hidden"></div>
+
+          <aside class="game-info-drawer hidden" id="gameInfoDrawer">
+            <div class="drawer-backdrop" data-close-drawer="true"></div>
+            <div class="drawer-content">
+              <div class="drawer-header">
+                <div class="drawer-title">旅程信息</div>
+                <button class="drawer-close-btn" id="closeDrawerBtn" type="button">
+                  <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+
+              <div class="r-section">
+                <div class="r-title">旅人档案</div>
+                <div class="profile-card" id="playerProfileCard"></div>
+              </div>
+
+              <div class="r-section">
+                <div class="r-title">世界设定</div>
+                <div class="note-card" id="storyContextCard"></div>
+              </div>
+
+              <div class="r-section">
+                <div class="r-title">当前目标</div>
+                <div class="note-card" id="objectiveCard"></div>
+              </div>
+
+              <div class="r-section">
+                <div class="r-title">角色关系</div>
+                <div id="characterCards"></div>
+              </div>
+
+              <div class="r-section">
+                <div class="r-title">关键事件</div>
+                <div class="ev-list" id="eventList"></div>
+              </div>
+
+              <div class="r-section">
+                <div class="r-title">剧情进度</div>
+                <div id="progressList"></div>
+              </div>
+
+              <div class="r-section">
+                <div class="r-title">线索札记</div>
+                <div class="clue-list" id="clueList"></div>
+              </div>
+
+              <div class="r-section">
+                <div class="r-title">上次影响</div>
+                <div class="impact-list" id="impactList"></div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </main>
+
+      <main class="screen" id="endingScreen" aria-label="结局界面">
+        <div class="ending-shell">
+          <div class="bg-radial"></div>
+          <div class="top-line"></div>
+
+          <div class="ending-tag-wrap">
+            <div class="ending-type-label">结局达成</div>
+            <div class="ending-badge" id="endingBadge"></div>
+          </div>
+
+          <div class="title-block">
+            <div class="ending-num" id="endingCode"></div>
+            <div class="ending-title" id="endingTitle"></div>
+            <div class="ending-subtitle" id="endingSubtitle"></div>
+          </div>
+
+          <div class="divider"><div class="d-line"></div><div class="d-diamond"></div><div class="d-line"></div></div>
+
+          <p class="ending-desc" id="endingDescription"></p>
+
+          <div class="conditions-block">
+            <div class="cond-title">达成条件</div>
+            <div class="cond-grid" id="endingConditions"></div>
+          </div>
+
+          <div class="endings-gallery-block">
+            <div class="gallery-title">结局图鉴</div>
+            <div class="ending-gallery" id="endingGallery"></div>
+          </div>
+
+          <div class="ending-recap-block">
+            <div id="endingRecap"></div>
+          </div>
+
+          <div class="action-group">
+            <button class="act-btn-primary" id="rollbackFromEndingBtn">回到关键节点继续探索</button>
+            <button class="act-btn-sec" id="restartBtn">重新开始新的旅程</button>
+            <button class="act-btn-dim" id="endingBackToMenuBtn">返回主菜单</button>
+          </div>
+        </div>
+      </main>
+
+      <section class="modal hidden" id="rollbackModal" aria-label="剧情回溯面板" aria-hidden="true">
+        <div class="modal-backdrop" data-close-modal="true"></div>
+        <div class="modal-card">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <div class="panel-sup">剧情时间轴</div>
+              <div class="panel-title">回溯 · Rollback</div>
+            </div>
+            <button class="close-btn" id="closeRollbackBtn">关闭</button>
+          </div>
+
+          <div class="warn-banner">
+            <div class="warn-icon">◈</div>
+            <div class="warn-text">
+              回溯会将当前进度恢复到指定关键节点，但已解锁的结局与图鉴记录会保留，方便你继续探索其他路线。
+            </div>
+          </div>
+
+          <div class="timeline-area" id="rollbackTimeline"></div>
+
+          <div class="bottom-bar">
+            <div class="bottom-note" id="rollbackCount"></div>
+            <div class="bottom-info">
+              <div class="info-chip">
+                <div class="chip-label">当前轮次</div>
+                <div class="chip-val gold" id="rollbackRound"></div>
+              </div>
+              <div class="info-chip">
+                <div class="chip-label">已解锁结局</div>
+                <div class="chip-val" id="rollbackEndingSummary"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="modal hidden" id="saveModal" aria-label="存档管理面板" aria-hidden="true">
+        <div class="modal-backdrop" data-close-save-modal="true"></div>
+        <div class="modal-card">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <div class="panel-sup" id="saveModalSup">存档管理</div>
+              <div class="panel-title" id="saveModalTitle">存档 · Save</div>
+            </div>
+            <button class="close-btn" id="closeSaveModalBtn">关闭</button>
+          </div>
+          <div class="save-slots" id="saveSlotList"></div>
+        </div>
+      </section>
+
+      <div class="toast hidden" id="toast"></div>
+
+      <!-- Auth Modal -->
+      <section class="auth-modal hidden" id="authModal">
+        <div class="auth-modal-backdrop" id="authModalBackdrop"></div>
+        <div class="auth-modal-card">
+          <button class="auth-modal-close" id="authModalClose" type="button" aria-label="关闭">
+            <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          <div class="auth-modal-header">
+            <h2 class="auth-modal-title" id="authModalTitle">登录</h2>
+            <p class="auth-modal-subtitle">登录以同步云存档与成就</p>
+          </div>
+          <form class="auth-form" id="authForm" autocomplete="off">
+            <div class="auth-field" id="authAliasField" style="display:none">
+              <label class="auth-label" for="authAlias">昵称</label>
+              <input class="auth-input" id="authAlias" type="text" placeholder="给自己取个名字" maxlength="20" autocomplete="off" />
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" for="authUsername">用户名</label>
+              <input class="auth-input" id="authUsername" type="text" placeholder="输入用户名" maxlength="32" required autocomplete="username" />
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" for="authPassword">密码</label>
+              <input class="auth-input" id="authPassword" type="password" placeholder="输入密码" minlength="6" required autocomplete="current-password" />
+            </div>
+            <div class="auth-error hidden" id="authError"></div>
+            <button class="auth-submit-btn" id="authSubmitBtn" type="submit">登录</button>
+          </form>
+          <div class="auth-footer">
+            <button class="auth-switch-btn" id="authSwitchBtn" type="button">还没有账号？去注册</button>
+            <button class="auth-guest-btn" id="authGuestBtn" type="button">以访客身份继续</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  REGISTERED
+  GUEST
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  alias        String
+  passwordHash String?
+  role         UserRole  @default(GUEST)
+  saves        SaveSlot[]
+  comments     Comment[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model SaveSlot {
+  id        String   @id @default(cuid())
+  slotId    String
+  title     String?
+  storyId   String?
+  payload   Json
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, slotId])
+}
+
+model Story {
+  id                String   @id
+  title             String
+  subtitle          String
+  genre             String
+  themeLabel        String
+  synopsis          String
+  description       String
+  uiTheme           String?
+  coverImage        String?
+  initialStageId    String
+  characterCount    Int      @default(0)
+  progressStepCount Int      @default(0)
+  endingCount       Int      @default(0)
+  playerRole        String?
+  storyPromise      String?
+  cinematicLead     String?
+  openingFrame      String?
+  worldGuide        String?
+  castGuide         Json?
+  journeySetup      Json?
+  progressSteps     Json?
+  endings           Json?
+  stages            Json?
+  display           Json?
+  packData          Json?
+  sortOrder         Int      @default(0)
+  isPublished       Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  storyId   String
+  alias     String
+  content   String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+}

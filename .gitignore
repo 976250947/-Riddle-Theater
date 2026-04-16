@@ -1,0 +1,7 @@
+node_modules/
+data/
+.tmp_uiux_skill/
+frontend/dist/
+backend/prisma/*.db
+backend/prisma/*.db-journal
+backend/.env
