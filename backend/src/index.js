@@ -8,13 +8,13 @@ const server = app.listen(port, () => {
   console.log(`Riddle Theatre API running at http://localhost:${port}`);
 });
 
-server.on("error", (err) => {
-  if (err.code === "EADDRINUSE") {
-    console.error(`Port ${port} is already in use. Trying ${port + 1}...`);
-    app.listen(port + 1, () => {
-      console.log(`Riddle Theatre API running at http://localhost:${port + 1}`);
-    });
-  } else {
-    throw err;
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(
+      `Port ${port} is already in use. Stop the conflicting process or set PORT explicitly before starting the API.`
+    );
+    process.exit(1);
   }
+
+  throw error;
 });
