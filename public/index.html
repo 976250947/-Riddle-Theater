@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>命运的抉择 | AI 交互叙事游戏</title>
+    <meta
+      name="description"
+      content="基于大模型叙事思路构建的 AI 交互叙事游戏 Web 原型，包含剧情推进、角色状态、多结局与剧情回溯。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=EB+Garamond:wght@400;500;600&family=Manrope:wght@500;600;700&family=Space+Grotesk:wght@500;700&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="grain"></div>
+      <div class="vignette"></div>
+      <div class="decorative-top"></div>
+
+      <main class="screen active" id="libraryScreen" aria-labelledby="libraryTitle">
+        <section class="library-layout">
+          <section class="library-hero panel-card">
+            <div class="ornament">◎ ✦ ◎</div>
+            <div class="title-sub">AI 交互叙事片单</div>
+            <h1 class="title-main" id="libraryTitle">请</h1>
+            <p class="library-copy">
+              这里不是一个开始按钮，而是一整排可以真正进入的世界。先挑中你今晚想沉进去的那部故事，再决定要以什么身份走进去。
+            </p>
+          </section>
+
+          <section class="library-grid">
+            <div class="library-shelf" id="storyShelfGrid"></div>
+
+            <aside class="library-preview panel-card">
+              <div class="panel-title">当前选中</div>
+              <div class="library-preview-card" id="libraryPreviewCard"></div>
+
+              <div class="library-action-group">
+                <button class="btn-primary" id="enterStoryBtn">进入该故事</button>
+                <button class="btn-secondary" id="libraryContinueBtn">继续上次旅程</button>
+                <button class="btn-secondary btn-secondary-dim" id="libraryShowGalleryBtn">查看该故事图鉴</button>
+              </div>
+
+              <div class="panel-divider"></div>
+
+              <div class="panel-title">最近一次旅程</div>
+              <div class="save-summary" id="librarySaveSummary">还没有保存过旅程。</div>
+            </aside>
+          </section>
+        </section>
+      </main>
+
+      <main class="screen" id="startScreen" aria-labelledby="gameTitle">
+        <section class="start-layout">
+          <section class="start-hero panel-card">
+            <div class="start-hero-main">
+              <div class="ornament">◎ ✦ ◎</div>
+              <div class="title-sub" id="storyGenre">AI 驱动交互叙事</div>
+              <h1 class="title-main" id="gameTitle">命运的抉择</h1>
+              <div class="title-sub title-sub-en" id="storySubtitle">Chronicles of Fate</div>
+              <p class="hero-hook" id="storyOpeningShot"></p>
+
+              <div class="divider">
+                <div class="divider-line"></div>
+                <div class="divider-diamond"></div>
+                <div class="divider-line"></div>
+              </div>
+
+              <p class="synopsis" id="storySynopsis">
+                你将踏入一座被迷雾掩埋的古城。每一次选择，都会重塑角色关系、改写线索归属，并把你引向不同的结局。故事由 AI 生成，而意义由你决定。
+              </p>
+
+              <div class="btn-group">
+                <button class="btn-primary" id="startNewGameBtn">开始新游戏</button>
+                <button class="btn-secondary" id="continueGameBtn">继续上次旅程</button>
+                <button class="btn-secondary" id="backToLibraryBtn">返回选集</button>
+                <button class="btn-secondary btn-secondary-dim" id="showGalleryBtn">查看结局图鉴</button>
+              </div>
+            </div>
+
+            <div class="start-hero-side">
+              <div class="hero-note">
+                <div class="panel-title">故事承诺</div>
+                <div class="hero-note-copy" id="storyPromiseLead"></div>
+              </div>
+              <div class="hero-note">
+                <div class="panel-title">你的开场位置</div>
+                <div class="hero-note-copy" id="storyRoleSummary"></div>
+              </div>
+              <div class="bottom-info">
+                <div class="info-item">
+                  <span class="info-label">题材</span>
+                  <span class="info-val" id="storyThemeLabel">奇幻悬疑</span>
+                </div>
+                <span class="info-sep">·</span>
+                <div class="info-item">
+                  <span class="info-label">结局</span>
+                  <span class="info-val" id="unlockedEndingCount">0 / 4</span>
+                </div>
+                <span class="info-sep">·</span>
+                <div class="info-item">
+                  <span class="info-label">模式</span>
+                  <span class="info-val">LLM Mock</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div class="start-grid">
+            <div class="start-main-column">
+              <div class="panel-card">
+                <div class="panel-title">故事导览</div>
+                <div class="setup-description" id="storyPackDescription"></div>
+                <div class="journey-effect-list" id="storyDetailFacts"></div>
+              </div>
+
+              <div class="panel-card">
+                <div class="panel-title">世界与人物</div>
+                <div class="story-world-guide" id="storyWorldGuide"></div>
+                <div class="story-cast-guide" id="storyCastGuide"></div>
+              </div>
+            </div>
+
+            <aside class="start-side-column">
+              <div class="panel-card">
+                <div class="panel-title">进入旅程</div>
+                <p class="setup-description" id="journeySetupPrompt"></p>
+                <label class="setup-label" id="playerAliasLabel" for="playerAliasInput">旅人代号</label>
+                <input
+                  class="setup-input"
+                  id="playerAliasInput"
+                  type="text"
+                  maxlength="16"
+                  placeholder="例如：无名旅人"
+                />
+                <p class="setup-description compact" id="playerAliasHint"></p>
+                <div class="setup-label">你会怎样靠近这段故事</div>
+                <div class="archetype-grid" id="archetypeButtons"></div>
+                <div class="journey-summary" id="journeySummary"></div>
+                <div class="journey-effect-list" id="journeyEffectList"></div>
+              </div>
+
+              <div class="panel-card">
+                <div class="panel-title">最近一次旅程</div>
+                <div class="save-summary" id="saveSummary">还没有保存过旅程。</div>
+              </div>
+
+              <div class="panel-card">
+                <div class="panel-title">已解锁结局</div>
+                <div class="ending-gallery compact" id="startGallery"></div>
+              </div>
+
+              <div class="panel-card">
+                <div class="panel-title">项目演示亮点</div>
+                <ul class="panel-list">
+                  <li>剧情文本会根据玩家行为实时变化</li>
+                  <li>角色关系会在陪伴、试探与误会里持续变化</li>
+                  <li>关键节点支持回溯并重走分支</li>
+                  <li>已解锁结局会永久保留在图鉴中</li>
+                </ul>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </main>
+
+      <main class="screen" id="gameScreen" aria-label="游戏主界面">
+        <div class="topbar">
+          <div class="topbar-left">
+            <div class="chapter-tag" id="chapterTag"></div>
+            <div class="round-tag" id="roundTag"></div>
+          </div>
+          <div class="topbar-actions">
+            <button class="top-btn" id="rollbackBtn">回溯</button>
+            <button class="top-btn" id="saveBtn">存档</button>
+            <button class="top-btn gold" id="backToMenuBtn">目录</button>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <section class="left-panel">
+            <div class="npc-bar">
+              <div class="npc-avatar" id="npcAvatar">莱</div>
+              <div>
+                <div class="npc-name" id="npcName"></div>
+                <div class="npc-mood">
+                  <span class="mood-dot"></span>
+                  <span id="npcMood"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="story-scroll" id="storyScroll"></div>
+
+            <div class="choices-area">
+              <div class="stream-status hidden" id="streamStatus" aria-live="polite">
+                <div class="stream-sigil">◈</div>
+                <div>
+                  <div class="stream-label" id="streamLabel">叙事引擎正在编织下一段命运</div>
+                  <div class="stream-dots" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="choices-label">你将如何回应</div>
+              <div id="choiceList"></div>
+              <form class="input-row" id="freeInputForm">
+                <input
+                  class="free-input"
+                  id="freeInput"
+                  type="text"
+                  maxlength="60"
+                  placeholder="输入你的自然语言回应，例如：我愿意告诉你真相"
+                />
+                <button class="send-btn" type="submit">提交</button>
+              </form>
+            </div>
+          </section>
+
+          <aside class="right-panel">
+            <div class="r-section">
+              <div class="r-title">旅人档案</div>
+              <div class="profile-card" id="playerProfileCard"></div>
+            </div>
+
+            <div class="r-section">
+              <div class="r-title">世界设定</div>
+              <div class="note-card" id="storyContextCard"></div>
+            </div>
+
+            <div class="r-section">
+              <div class="r-title">当前目标</div>
+              <div class="note-card" id="objectiveCard"></div>
+            </div>
+
+            <div class="r-section">
+              <div class="r-title">角色关系</div>
+              <div id="characterCards"></div>
+            </div>
+
+            <div class="r-section">
+              <div class="r-title">关键事件</div>
+              <div class="ev-list" id="eventList"></div>
+            </div>
+
+            <div class="r-section">
+              <div class="r-title">剧情进度</div>
+              <div id="progressList"></div>
+            </div>
+
+            <div class="r-section">
+              <div class="r-title">线索札记</div>
+              <div class="clue-list" id="clueList"></div>
+            </div>
+
+            <div class="r-section">
+              <div class="r-title">上次影响</div>
+              <div class="impact-list" id="impactList"></div>
+            </div>
+          </aside>
+        </div>
+      </main>
+
+      <main class="screen" id="endingScreen" aria-label="结局界面">
+        <section class="ending-layout">
+          <div class="ending-tag-wrap">
+            <div class="ending-type-label">结局达成</div>
+            <div class="ending-badge" id="endingBadge"></div>
+          </div>
+
+          <div class="title-block">
+            <div class="ending-num" id="endingCode"></div>
+            <h2 class="ending-title" id="endingTitle"></h2>
+            <div class="ending-subtitle" id="endingSubtitle"></div>
+          </div>
+
+          <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-diamond"></div>
+            <div class="divider-line"></div>
+          </div>
+
+          <p class="ending-desc" id="endingDescription"></p>
+
+          <div class="conditions-block">
+            <div class="cond-title">达成条件</div>
+            <div class="cond-grid" id="endingConditions"></div>
+          </div>
+
+          <div class="endings-gallery-block">
+            <div class="gallery-title">结局图鉴</div>
+            <div class="ending-gallery" id="endingGallery"></div>
+          </div>
+
+          <div class="action-group">
+            <button class="act-btn-primary" id="rollbackFromEndingBtn">回到关键节点继续探索</button>
+            <button class="act-btn-sec" id="restartBtn">重新开始新的旅程</button>
+            <button class="act-btn-dim" id="endingBackToMenuBtn">返回主菜单</button>
+          </div>
+        </section>
+      </main>
+
+      <section class="modal hidden" id="rollbackModal" aria-label="剧情回溯面板" aria-hidden="true">
+        <div class="modal-backdrop" data-close-modal="true"></div>
+        <div class="modal-card">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <div class="panel-sup">剧情时间轴</div>
+              <div class="panel-title">回溯 · Rollback</div>
+            </div>
+            <button class="close-btn" id="closeRollbackBtn" data-close-modal="true">关闭</button>
+          </div>
+
+          <div class="warn-banner">
+            <div class="warn-icon">◈</div>
+            <div class="warn-text">
+              回溯会将当前进度恢复到指定关键节点，但已解锁的结局与图鉴记录会保留，方便你继续探索其他路线。
+            </div>
+          </div>
+
+          <div class="timeline-area" id="rollbackTimeline"></div>
+
+          <div class="bottom-bar">
+            <div class="bottom-note" id="rollbackCount"></div>
+            <div class="bottom-info">
+              <div class="info-chip">
+                <div class="chip-label">当前轮次</div>
+                <div class="chip-val gold" id="rollbackRound"></div>
+              </div>
+              <div class="info-chip">
+                <div class="chip-label">已解锁结局</div>
+                <div class="chip-val" id="rollbackEndingSummary"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="toast hidden" id="toast"></div>
+    </div>
+
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>

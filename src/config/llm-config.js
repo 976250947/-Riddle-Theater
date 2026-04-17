@@ -4,28 +4,43 @@
  * 支持 OpenAI 兼容接口（OpenAI / Deepseek / 本地 Ollama 等）
  */
 
+const ENV = import.meta.env ?? {};
+
+function readBoolEnv(name, fallback = false) {
+  const value = ENV[name];
+  if (value === undefined || value === null || value === "") return fallback;
+  return ["1", "true", "yes", "on"].includes(String(value).toLowerCase());
+}
+
+function readNumberEnv(name, fallback) {
+  const value = Number(ENV[name]);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+const envApiKey = String(ENV.VITE_LLM_API_KEY || ENV.VITE_DEEPSEEK_API_KEY || "").trim();
+
 export const LLM_CONFIG = {
   /** 是否启用 LLM 动态生成（关闭时回退到预设文本） */
-  enabled: false,
+  enabled: readBoolEnv("VITE_LLM_ENABLED", false),
 
   /** API 基础地址（尾部不含 /chat/completions） */
-  baseURL: "https://api.openai.com/v1",
+  baseURL: String(ENV.VITE_LLM_BASE_URL || ENV.VITE_DEEPSEEK_BASE_URL || "https://api.deepseek.com").trim(),
 
   /** API 密钥（仅用于开发；生产环境应走后端代理） */
-  apiKey: "",
+  apiKey: envApiKey,
 
   /** 模型标识 */
-  model: "gpt-4o-mini",
+  model: String(ENV.VITE_LLM_MODEL || ENV.VITE_DEEPSEEK_MODEL || "deepseek-chat").trim(),
 
   /** 请求超时（毫秒） */
-  timeout: 30000,
+  timeout: readNumberEnv("VITE_LLM_TIMEOUT", 30000),
 
   /** 生成参数 */
-  temperature: 0.85,
-  maxTokens: 800,
+  temperature: readNumberEnv("VITE_LLM_TEMPERATURE", 0.85),
+  maxTokens: readNumberEnv("VITE_LLM_MAX_TOKENS", 800),
 
   /** 是否启用流式输出 */
-  stream: false
+  stream: readBoolEnv("VITE_LLM_STREAM", false)
 };
 
 /**

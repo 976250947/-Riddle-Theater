@@ -5,3 +5,6 @@ frontend/dist/
 backend/prisma/*.db
 backend/prisma/*.db-journal
 backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local

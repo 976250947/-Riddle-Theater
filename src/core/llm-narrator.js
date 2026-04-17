@@ -13,14 +13,14 @@ import {
   buildMessages,
   isLLMEnabled,
   LLMDisabledError
-} from "./llm-client.js";
+} from "./llm-driver.js";
 
 import {
   buildExplorePrompt,
   buildDialoguePrompt,
   buildNarratePrompt,
   buildRecapPrompt
-} from "../config/llm-config.js";
+} from "../config/llm-runtime.js";
 
 // ---------- 公开接口 ----------
 
@@ -99,12 +99,17 @@ async function _generate(userPrompt, opts = {}) {
     let text;
 
     if (opts.onChunk) {
-      text = await chatCompletionStream(messages, opts.onChunk);
+      text = await chatCompletionStream(messages, opts.onChunk, opts);
     } else {
-      text = await chatCompletion(messages);
+      text = await chatCompletion(messages, opts);
     }
 
-    return { ok: true, text };
+    const normalizedText = String(text || "").trim();
+    if (!normalizedText) {
+      return { ok: false, text: "", error: "empty_content" };
+    }
+
+    return { ok: true, text: normalizedText };
   } catch (err) {
     if (err instanceof LLMDisabledError) {
       return { ok: false, text: "" };

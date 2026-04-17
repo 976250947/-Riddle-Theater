@@ -241,7 +241,7 @@ async function run() {
   });
 
   // ── LLM Config ──
-  const llmConfig = await import("../src/config/llm-config.js");
+  const llmConfig = await import("../src/config/llm-runtime.js");
 
   describe("llm-config exports", () => {
     it("has LLM_CONFIG object", () => {
@@ -271,7 +271,7 @@ async function run() {
   });
 
   // ── LLM Client ──
-  const llmClient = await import("../src/core/llm-client.js");
+  const llmClient = await import("../src/core/llm-driver.js");
 
   describe("llm-client.isLLMEnabled()", () => {
     it("returns false by default", () => {
@@ -301,6 +301,39 @@ async function run() {
   });
 
   // ── LLM Narrator ──
+  describe("llm-client.chatCompletion() (enabled)", () => {
+    it("normalizes text content from fetch response", async () => {
+      const originalFetch = global.fetch;
+      global.fetch = async () => ({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content: [{ type: "text", text: "测试返回" }]
+              }
+            }
+          ]
+        })
+      });
+
+      llmClient.configureLLM({
+        enabled: true,
+        apiKey: "test-key",
+        baseURL: "https://example.com",
+        model: "deepseek-chat"
+      });
+
+      try {
+        const text = await llmClient.chatCompletion([{ role: "user", content: "hello" }]);
+        assertEqual(text, "测试返回");
+      } finally {
+        llmClient.resetLLMConfig();
+        global.fetch = originalFetch;
+      }
+    });
+  });
+
   const narrator = await import("../src/core/llm-narrator.js");
 
   describe("llm-narrator (LLM disabled)", () => {
@@ -319,6 +352,60 @@ async function run() {
     it("llmRecap returns ok:false when disabled", async () => {
       const result = await narrator.llmRecap({}, {}, {});
       assertEqual(result.ok, false);
+    });
+  });
+
+  describe("story-engine LLM fallback regression", () => {
+    it("submitExploreAction still returns local feedback when LLM request fails", async () => {
+      const originalFetch = global.fetch;
+      global.fetch = async () => {
+        throw new Error("network down");
+      };
+
+      llmClient.configureLLM({
+        enabled: true,
+        apiKey: "test-key",
+        baseURL: "https://example.com",
+        model: "deepseek-chat"
+      });
+
+      const state = engine.createInitialState({}, { storyId: "mistycity", archetypeId: "witness" });
+
+      try {
+        const result = await engine.submitExploreAction(state, "检查周围");
+        assertEqual(result.success, true);
+        assertType(result.feedback, "string");
+        assert(result.feedback.length > 0, "should produce local fallback feedback");
+      } finally {
+        llmClient.resetLLMConfig();
+        global.fetch = originalFetch;
+      }
+    });
+
+    it("submitDialogue still returns local dialogue when LLM request fails", async () => {
+      const originalFetch = global.fetch;
+      global.fetch = async () => {
+        throw new Error("network down");
+      };
+
+      llmClient.configureLLM({
+        enabled: true,
+        apiKey: "test-key",
+        baseURL: "https://example.com",
+        model: "deepseek-chat"
+      });
+
+      const state = engine.createInitialState({}, { storyId: "mistycity", archetypeId: "witness" });
+
+      try {
+        const result = await engine.submitDialogue(state, "leya", "你还好吗");
+        assertEqual(result.success, true);
+        assertType(result.response, "string");
+        assert(result.response.length > 0, "should produce local fallback dialogue");
+      } finally {
+        llmClient.resetLLMConfig();
+        global.fetch = originalFetch;
+      }
     });
   });
 

@@ -161,20 +161,29 @@ export const useGameStore = defineStore("game", () => {
     _enterCurrentStage();
   }
 
+  function buildInteractionLines(lines) {
+    const nextLines = lines.filter(Boolean);
+    const st = getCurrentStage(state.value);
+    if (st?.choices?.length) {
+      nextLines.push({ type: "choices", choices: st.choices });
+    }
+    return nextLines;
+  }
+
   async function doExplore(actionText) {
     const result = await submitExploreAction(state.value, actionText);
     state.value = result.state || state.value;
     saveSession(state.value);
     if (result.narrativeText || result.feedback) {
       _startPerformance(
-        [
+        buildInteractionLines([
           result.narrativeText
             ? { speaker: "旁白", text: result.narrativeText, mood: "neutral", type: "narration" }
             : null,
           result.feedback
             ? { speaker: "系统", text: result.feedback, mood: "neutral", type: "narration" }
             : null,
-        ].filter(Boolean)
+        ])
       );
     }
     return result;
@@ -185,14 +194,14 @@ export const useGameStore = defineStore("game", () => {
     state.value = result.state || state.value;
     saveSession(state.value);
     if (result.response) {
-      _startPerformance([
+      _startPerformance(buildInteractionLines([
         {
           speaker: result.speaker || characterId,
           text: result.response,
           mood: result.mood || "neutral",
           type: "dialogue"
         }
-      ]);
+      ]));
     }
     return result;
   }

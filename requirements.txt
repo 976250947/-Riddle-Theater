@@ -1,0 +1,3 @@
+# This repository currently runs on Node.js workspaces.
+# No Python third-party packages are required for the app itself right now.
+# The file is kept so Python-oriented deployment tools can install successfully.

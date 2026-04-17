@@ -381,7 +381,7 @@ async function resolveExploreAction(state, pack, stage, actionText) {
     return stage.resolveExplore(state, actionText);
   }
 
-  return generateFallbackExplore(state, stage, actionText);
+  return generateStableFallbackExplore(state, stage, actionText);
 }
 
 async function generateFallbackExplore(state, stage, actionText) {
@@ -485,7 +485,7 @@ async function resolveDialogue(state, pack, stage, character, messageText) {
     return stage.resolveDialogue(state, character, messageText);
   }
 
-  return generateRelationshipDialogue(state, character, messageText);
+  return generateStableRelationshipDialogue(state, character, messageText);
 }
 
 async function generateRelationshipDialogue(state, character, messageText) {
@@ -572,6 +572,106 @@ function saveDialogueRecord(state, characterId, messageText, result) {
     npcResponse: result.response,
     timestamp: new Date().toISOString()
   });
+}
+
+async function generateStableFallbackExplore(state, stage, actionText) {
+  const worldState = getWorldState(state);
+  const llmResult = await llmExplore(worldState, actionText);
+  const scene = stage?.sceneTag || stage?.title || "当前场景";
+
+  if (llmResult.ok && llmResult.text) {
+    return {
+      feedback: llmResult.text,
+      narrativeText: `你在${scene}中继续追索着：「${actionText}」`
+    };
+  }
+
+  return {
+    feedback: randomFrom([
+      `你仔细观察了${scene}周围的细节，但暂时没有发现足以直接改变局势的新线索。`,
+      `你的调查暂时没有形成突破，不过这次行动让你对${scene}的氛围和异样更加敏感。`,
+      `你沿着这个方向继续搜寻，却还没找到决定性的答案。${scene}里的某些细节仍在等待你下一次靠近。`
+    ]),
+    narrativeText: `你在${scene}中继续追索着：「${actionText}」`
+  };
+}
+
+async function generateStableRelationshipDialogue(state, character, messageText) {
+  const attitude = deriveAttitude(character);
+  const willingness = deriveWillingness(character);
+  const worldState = getWorldState(state);
+  const characterState = {
+    name: character.name,
+    role: character.role,
+    mood: character.mood,
+    affinity: character.affinity,
+    trust: character.trust,
+    alertness: character.alertness,
+    relationshipStage: character.relationshipStage,
+    attitude
+  };
+
+  const llmResult = await llmDialogue(worldState, character.characterId, characterState, messageText);
+  if (llmResult.ok && llmResult.text) {
+    return {
+      response: llmResult.text,
+      mood: character.mood,
+      attitudeShift: describeAttitudeShift(willingness)
+    };
+  }
+
+  const toneMap = {
+    hostile: ["冷淡", "抵触", "警惕", "回避"],
+    neutral: ["平静", "保留", "试探", "观察"],
+    cautious_trust: ["谨慎", "思索", "克制地回应", "略带善意"],
+    warm_but_guarded: ["温和但克制", "友善但保留", "靠近了一点又保持距离"],
+    ally: ["坦诚", "信任", "愿意分享", "真诚"]
+  };
+
+  const responses = {
+    hostile: [
+      `${character.name}的目光冷了些：“这不是你现在该问的。”`,
+      `${character.name}微微侧身，语气带着防备：“你的好奇心并不会让我立刻信任你。”`,
+      `${character.name}没有直接回答，只淡淡地说：“先管好你自己该看的部分。”`
+    ],
+    neutral: [
+      `${character.name}看着你，像是在衡量你的来意：“你想知道什么，取决于你打算承担什么。”`,
+      `${character.name}沉默了片刻，才低声回道：“这个问题，我还不能给你完整答案。”`,
+      `${character.name}没有否认，也没有承认，只是把语气压得很平：“也许你还差一点点火候。”`
+    ],
+    cautious_trust: [
+      `${character.name}停顿了一下，声音放轻了些：“我可以告诉你一部分，但你得先保证别把它说出去。”`,
+      `${character.name}注视着你，像在做最后确认：“你真想知道的话，就别在听见之后退缩。”`,
+      `${character.name}终于松了松语气：“好，我说一点，但你只能先听到这里。”`
+    ],
+    warm_but_guarded: [
+      `${character.name}露出一点无奈的笑意：“你总能问到让我最难回答的地方。”`,
+      `${character.name}轻轻叹了口气：“好吧，我告诉你我能告诉你的那部分。”`,
+      `${character.name}靠近了半步，声音柔下来：“如果是你来问，我愿意多说一点，但还不能全说。”`
+    ],
+    ally: [
+      `${character.name}没有再回避，目光稳稳落在你身上：“既然你问了，我就把我知道的告诉你。”`,
+      `${character.name}语气明显柔和下来：“现在的你，已经足够理解这些话的分量了。”`,
+      `${character.name}几乎没有犹豫：“我信你，所以这次我不再保留。”`
+    ]
+  };
+
+  const tones = toneMap[attitude] || toneMap.neutral;
+  return {
+    response: randomFrom(responses[attitude] || responses.neutral),
+    mood: randomFrom(tones),
+    attitudeShift: describeAttitudeShift(willingness)
+  };
+}
+
+function describeAttitudeShift(willingness) {
+  if (willingness === "guarded") return "对你仍保持距离";
+  if (willingness === "open") return "对你有了更多信任";
+  return "态度没有明显变化";
+}
+
+function randomFrom(items) {
+  return items[Math.floor(Math.random() * items.length)];
 }
 
 /* ── Dynamic Options Generation ── */
